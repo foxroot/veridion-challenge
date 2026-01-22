@@ -21,8 +21,10 @@ Then, I improve the performance by partitioning by country code.
 
 Next, I count all rows: the row count of all rows is 33446
 I come up with 3 cases and some sub-cases:
+
 1.  Non-null company and non-null country code. In this case we can do the de-duplication by country code + company
 The row count: 30821
+
 These are the two fields which make a company unique
 coalesce(company_name,company_legal_names,company_commercial_names) leads to the same number of rows so I don't include this in the code
 and coalesce(main_country_code,main_country) leads to the same number of rows so I don't include this in the code
@@ -32,14 +34,18 @@ The field locations from the company data looks like a concatenation of the addr
 The row count of the unique company name + country code combinations: 10662
 The row count of the duplicate company name + country code combinations: 20159
 The row count for the remaining data, not accounted so far: 2625
+
 2. Null company name
+
 The row count: 829. There are two sub-cases:
 - the website is not null - we use the website domain for the deduplication as long as this is not part of the domains from case 1. Row count: 55
 - the website is null - we exclude these fields from the main data, and add them to dupes data. Row count: 213
 
 The country code can be either null or not.
 Here, I assume that the relationship between the company and country is 1:1 but the relationship between the company and the website is one:many so this means multiple websites can actually be associated with the same company but we don't know the company here so this can also create duplicates.
+
 3. Non null company name
+
 The row count: 1796
  - we do the de-duplication on company only if the company is not already in the main company data. Row count: 563 - these will be added later to the company data. The duplicate records will be added to the dupes dataframe - row count - 1233
 N.B. I assume that a company can have many websites with different domains so company + website domain would not be unique
@@ -49,4 +55,5 @@ In the end:
 - row count duplicate company data: 22166
 
 Caveats:
+
 This solution does not take into consideration cases like e.g. there are two similar company names e.g. Avalon Incorporated and Avalon Inc. The solution classified these as two distinct companies but they might not be.
